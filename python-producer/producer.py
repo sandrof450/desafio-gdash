@@ -11,22 +11,22 @@ from datetime import datetime
 # ---------------------------------------------------
 
 # Lê as variáveis de ambiente (MELHOR PRÁTICA)
-RABBITMQ_URL = "amqp://guest:guest@rabbitmq:5672/"
-QUEUE_NAME = "weather_queue"
+RABBITMQ_URL = os.environ.get("RABBITMQ_URL", "amqp://guest:guest@rabbitmq:5672/")
+QUEUE_NAME = os.environ.get("QUEUE_NAME", "weather_queue")
 
 # Variáveis para a API de Clima
-OPEN_WEATHER_API_KEY = os.environ.get("OPEN_WEATHER_API_KEY", "937b7f0b1d1faf7ac72fa13cc430ced6") 
+OPEN_WEATHER_API_KEY = os.environ.get("OPEN_WEATHER_API_KEY", "PLACEHOLDER_OPENWEATHER_KEY") 
 LATITUDE = os.environ.get("LATITUDE", "-27.5945")
 LONGITUDE = os.environ.get("LONGITUDE", "-48.5477")
 PRODUCER_SOURCE = "go-producer" 
 
 # AJUSTE CRÍTICO: Tratamento de erro para garantir que INTERVAL_SECONDS seja um inteiro
-interval_str = os.environ.get("INTERVAL_SECONDS", "60")
+interval_str = os.environ.get("INTERVAL_SECONDS", "200")
 try:
     INTERVAL_SECONDS = int(interval_str)
 except ValueError:
-    print(f"❌ ERRO: INTERVAL_SECONDS '{interval_str}' é inválido. Usando 60 segundos.")
-    INTERVAL_SECONDS = 60
+    print(f"❌ ERRO: INTERVAL_SECONDS '{interval_str}' é inválido. Usando 200 segundos.")
+    INTERVAL_SECONDS = 200
     
 connection = None
 channel = None
