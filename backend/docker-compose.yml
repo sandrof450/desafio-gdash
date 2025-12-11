@@ -1,0 +1,40 @@
+version: '3.8'
+name: gdash
+
+services:
+  gdash_api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: gdash_api
+    # restart: always
+    ports:
+      - "3000:3000"
+
+    # 1. Carrega todas as variáveis do .env (para as menos críticas)
+    env_file:
+      - .env
+
+    # 2. CORREÇÃO: Define as variáveis CRÍTICAS (como DATABASE_URL)
+    #    diretamente aqui para garantir que sejam lidas pelo container,
+    #    substituindo o valor no .env caso haja conflito.
+    environment:
+      NODE_ENV: production # Variável Adicionada (Configura o ambiente Node.js)
+      LOG_LEVEL: info      # Variável Adicionada (Define o nível de verbosidade do log)
+      PORT: 3000
+      
+      # Variáveis de Segredo e Conexão
+      DATABASE_URL: "mongodb+srv://sandrof450:SenhaForte@clusterparatestes.wo2eqqz.mongodb.net/clusterParaTestes?retryWrites=true&w=majority"
+      JWT_ACCESS_SECRET: 4a827787c64ec0b672ac14262619b662ccce4c5f
+      JWT_REFRESH_SECRET: 39445682871568c7b9df6bdc868ebc450d9fc198
+      WORKER_API_KEY: 25efb6b59f1700721cac5c663392e730c5a8629c # Já estava, mas garantido aqui
+    
+    # NOVO COMANDO PARA TESTAR A INICIALIZAÇÃO DE PRODUÇÃO
+    command: npm run start:prod
+    
+    networks:
+      - default
+
+networks:
+  default:
+    driver: bridge
