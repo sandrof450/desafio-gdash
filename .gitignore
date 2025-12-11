@@ -1,0 +1,61 @@
+# ==================================
+# 1. DEPENDÊNCIAS E BUILDS (NODE.JS / REACT / VITE)
+# ==================================
+# Ignora a pasta de módulos de dependência
+/node_modules
+# Ignora o resultado da compilação do Vite/React
+/dist
+# Ignora arquivos de cache do Vite
+.vite/
+# Arquivos de logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+# Arquivos gerados pelo VS Code / WebStorm
+*.tsbuildinfo
+.idea/
+.vscode/
+
+# ==================================
+# 2. VARIÁVEIS DE AMBIENTE E SECRETS
+# ==================================
+# CRÍTICO: Nunca comite variáveis de ambiente com segredos
+.env
+.env.development
+.env.local
+.env.production
+.env.*.local
+.DS_Store
+
+# ==================================
+# 3. AMBIENTE PYTHON (PRODUTOR)
+# ==================================
+# Ambiente Virtual
+/venv
+# Arquivos de bytecode (compilados)
+*.pyc
+__pycache__/
+# Arquivos de log de teste
+.pytest_cache
+
+# ==================================
+# 4. AMBIENTE C# / .NET (se aplicável ao backend)
+# ==================================
+# Pastas de build
+[Dd]ebug/
+[Rr]elease/
+# Arquivos de configuração de usuário
+*.suo
+*.user
+*.useros
+# Pacotes NuGet
+/packages
+
+# ==================================
+# 5. DOCKER
+# ==================================
+# Ignora imagens Docker criadas
+*.orig
+# Logs e caches de Docker
+.dockerignore
+.docker/
