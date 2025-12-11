@@ -1,0 +1,199 @@
+version: '3.8'
+
+# Este é o nome da rede Docker Compose (o nome da sua pasta raiz)
+name: desafio-gdash
+
+services:
+  # ---------------------------------------------------
+  # SERVIÇOS DE INFRA (MongoDB e RabbitMQ) - SEM ALTERAÇÃO DE CAMINHO
+  # ---------------------------------------------------
+  mongo-keyfile-setup:
+    image: alpine:latest
+    container_name: mongo-keyfile-setup
+    command: >
+      sh -c "
+        chmod 400 /data/keyfile/mongo-keyfile &&
+        chown 999:999 /data/keyfile/mongo-keyfile
+      "
+    volumes:
+      - ./mongo-keyfile:/data/keyfile/mongo-keyfile:rw
+    restart: "no"
+
+  mongodb:
+    image: mongo:latest
+    container_name: mongodb
+    restart: always
+    command: [
+      "mongod",
+      "--replSet", "rs0",
+      "--keyFile", "/data/keyfile/mongo-keyfile",
+      "--bind_ip", "0.0.0.0"
+    ]
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_USER}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD}
+      MONGO_INITDB_DATABASE: ${MONGO_DATABASE}
+    volumes:
+      - mongo-data:/data/db
+      - ./mongo-keyfile:/data/keyfile/mongo-keyfile:ro
+    healthcheck:
+      test: [
+        "CMD",
+        "mongosh",
+        "--host", "mongodb:27017",
+        "--username", "${MONGO_USER}",
+        "--password", "${MONGO_PASSWORD}",
+        "--authenticationDatabase", "admin",
+        "--eval", "db.runCommand({ ping: 1 })"
+      ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    depends_on:
+      mongo-keyfile-setup:
+        condition: service_completed_successfully
+
+  # 2. SERVIÇO DE INICIALIZAÇÃO DO REPLICA SET (Executa rs.initiate())
+  # Este serviço só roda uma vez e é crucial para que o MongoDB fique Healthy.
+  mongo-init:
+    image: mongo:latest
+    container_name: mongo-init
+    depends_on:
+      mongodb:
+        condition: service_started
+    restart: "no"
+    command: >
+      bash -c "
+        echo 'Aguardando MongoDB iniciar...' &&
+        sleep 25 &&
+        echo 'Inicializando replica set...' &&
+        mongosh --host mongodb:27017 -u ${MONGO_USER} -p ${MONGO_PASSWORD} --authenticationDatabase admin --eval '
+          try {
+            const status = rs.status();
+            print(\"Replica set já inicializado. Status:\");
+            printjson(status);
+          } catch (err) {
+            print(\"Inicializando replica set...\");
+            const result = rs.initiate({
+              _id: \"rs0\",
+              members: [
+                { _id: 0, host: \"mongodb:27017\", priority: 1 }
+              ]
+            });
+            print(\"Replica set inicializado. Resultado:\");
+            printjson(result);
+          }
+        '
+      "
+    environment:
+      MONGO_USER: ${MONGO_USER}
+      MONGO_PASSWORD: ${MONGO_PASSWORD}
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    ports:
+      - "5672:5672"   # Porta padrão AMQP
+      - "15672:15672" # ESSA PORTA É CRÍTICA PARA O WEB UI
+    container_name: rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER}
+      # ... (outras variáveis) ...
+    healthcheck:
+      # O comando 'test' é crucial e deve ser uma lista YAML
+      test: ["CMD", "rabbitmqctl", "status"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  # ---------------------------------------------------
+  # 3. BACKEND (NestJS) - CONTEXTO CORRIGIDO!
+  # ---------------------------------------------------
+  nestjs-backend:
+    build:
+      context: ../backend # Corrigido: Um nível acima da pasta infra/
+      dockerfile: Dockerfile
+    container_name: nestjs-backend
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env # Continua buscando o .env na pasta infra/
+    environment:
+      DATABASE_URL: mongodb://${MONGO_USER}:${MONGO_PASSWORD}@mongodb:27017/${MONGO_DATABASE}?authSource=admin
+      # ... (outras variáveis e secrets) ...
+    command: npm run start:prod
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      mongo-init:
+        condition: service_completed_successfully
+
+  # ---------------------------------------------------
+  # 4. WORKER (Go) - CONTEXTO CORRIGIDO!
+  # ---------------------------------------------------
+  worker-go:
+    build:
+      context: ../go-worker
+      dockerfile: Dockerfile
+    container_name: worker-go
+    # ... (outras configurações)
+    environment: 
+      # Variáveis para o NestJS
+      NEST_ENDPOINT: http://nestjs-backend:3000
+      
+      WORKER_API_KEY: '25efb6b59f1700721cac5c663392e730c5a8629c'
+      WORKER_SERVICE_ID: '692dba9bd1881c5dcf431428'
+      # Variáveis para o RabbitMQ (A CORREÇÃO NECESSÁRIA)          
+      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672/ 
+      QUEUE_NAME: weather_queue
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      nestjs-backend:
+        condition: service_started
+
+  # ---------------------------------------------------
+  # 5. PRODUCER (Python) - CONTEXTO CORRIGIDO!
+  # ---------------------------------------------------
+  producer-py:
+    build: 
+      context: ../python-producer # Substitua pelo caminho da sua pasta producer
+      dockerfile: Dockerfile
+    environment: # Injeta as variáveis de ambiente necessárias
+      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672/
+      - QUEUE_NAME=weather_queue
+      - OPEN_WEATHER_API_KEY=937b7f0b1d1faf7ac72fa13cc430ced6
+      - LATITUDE=-27.5945
+      - LONGITUDE=-48.5477
+      - INTERVAL_SECONDS=30
+    depends_on:
+      - rabbitmq # Garante que o RabbitMQ esteja ativo antes de tentar conectar
+    restart: on-failure # Tenta reiniciar em caso de falha de conexão
+      
+  # ---------------------------------------------------
+  # 6. FRONTEND (React + Vite)
+  # ---------------------------------------------------
+  frontend:
+    build:
+      context: ../frontend
+      dockerfile: Dockerfile
+    container_name: frontend
+    # Mapeia a porta 80 (Nginx interno) para a 5173 (acesso externo)
+    ports:
+      - "5173:80" 
+    # Garante que a variável de ambiente do React aponte para o backend
+    environment:
+      # O frontend deve se conectar ao NestJS via sua porta externa (3000)
+      VITE_API_BASE_URL: http://localhost:3000/api 
+    depends_on:
+      - nestjs-backend
+
+# Volumes para persistência de dados
+volumes:
+  mongo-data:
+  rabbitmq_data:
