@@ -1,0 +1,9 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --background: oklch(1 0 0);
+    --border: oklch(0.929 0.013 255.508);
+    /* ... suas outras variáveis ... */
+  }
+}
