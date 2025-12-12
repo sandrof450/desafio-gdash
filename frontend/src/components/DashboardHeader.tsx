@@ -1,8 +1,8 @@
-import { useWeather } from "src/contexts/WeatherContext";
+import { useMetrics } from "src/contexts/WeatherMetricsContext";
 
 
 const DashboardHeader = () => {
-  const { insights } = useWeather();
+  const { metrics } = useMetrics();
   
   return (
     <header className="text-center mb-10">
@@ -11,8 +11,8 @@ const DashboardHeader = () => {
       </h1>
       <p className="text-gray-600 text-lg">
         Última Análise:{" "}
-        {insights?.analysisDate
-          ? new Date(insights.analysisDate).toLocaleString()
+        {metrics?.analysisDate
+          ? new Date(metrics.analysisDate).toLocaleString()
           : "Data indisponível"}
       </p>
     </header>
