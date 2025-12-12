@@ -24,6 +24,8 @@ import ButtonLogout from "@/components/ButtonLogout";
 //import { formatDate } from '../utils/formatUtils';
 import { useWeather } from "../contexts/WeatherContext";
 import DashboardSkeleton from "@/components/DashboardSkeleton";
+import React from "react";
+import { useMetrics } from "src/contexts/WeatherMetricsContext";
 
 // Registrar os elementos necessários do Chart.js
 ChartJS.register(
@@ -40,32 +42,20 @@ ChartJS.register(
 const DashboardPage: React.FC = () => {
   const { logout } = useAuth();
 
-  const {
-    currentPage,
-    totalPages,
-    weatherLoading: loading,
-    weatherError: error,
-    setCurrentPage,
-  } = useWeather();
+  const { logsLoading, logsError, setCurrentPage, currentPage } = useWeather();
 
-  const handleNextPage = () => {
-    if (currentPage < totalPages) {
-      setCurrentPage((prev) => prev + 1);
-    }
-  };
+  const { metricsLoading, metricsError } = useMetrics();
 
-  const handlePrevPage = () => {
-    if (currentPage > 1) {
-      setCurrentPage((prev) => prev - 1);
-    }
-  };
+  const initialLoading = (logsLoading && currentPage === 1) || metricsLoading;
+  const error = logsError || metricsError;
 
-  // 2. CLÁUSULA DE GUARDA: Renderiza o Skeleton se estiver carregando
-  if (loading) {
+  //CLÁUSULA DE GUARDA: Renderiza o Skeleton se estiver carregando
+  if (initialLoading) {
+    setCurrentPage(1);
     return <DashboardSkeleton />;
   }
 
-  // 3. CLÁUSULA DE GUARDA: Renderiza o erro se houver falha
+  // CLÁUSULA DE GUARDA: Renderiza o erro se houver falha
   if (error) {
     return (
       <div className="p-10 text-center text-xl text-red-600">
@@ -105,10 +95,7 @@ const DashboardPage: React.FC = () => {
           <TemperatureChart />
 
           {/* TABELA DE LOGS BRUTOS */}
-          <LogsTable
-            handlePrevPage={handlePrevPage}
-            handleNextPage={handleNextPage}
-          />
+          <LogsTable />
 
           {/* RODAPÉ */}
           <Footer />

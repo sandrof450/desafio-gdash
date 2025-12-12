@@ -1,21 +1,30 @@
-import React from "react";
 import { useWeather } from "src/contexts/WeatherContext";
 import { TableSkeleton } from "./TableSkeleton";
+import React from "react";
 
-interface LogsTableProps {
-  handlePrevPage: () => void;
-  handleNextPage: () => void;
-}
-
-const LogsTable: React.FC<LogsTableProps> = (props: LogsTableProps) => {
+const LogsTable = () => {
   const {
     currentPage,
     totalPages,
     totalLogs,
     logs,
-    weatherLoading: loading,
+    logsLoading: loading,
+    logsError: error,
+    setCurrentPage,
   } = useWeather();
 
+  const handleNextPage = (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+    if (currentPage < totalPages) {
+      setCurrentPage((prev) => prev + 1);
+    }
+  };
+
+  const handlePrevPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage((prev) => prev - 1);
+    }
+  };
   // Condição para exibir a animação
   if (loading) {
     return (
@@ -36,6 +45,17 @@ const LogsTable: React.FC<LogsTableProps> = (props: LogsTableProps) => {
           Logs Brutos (Detalhamento)
         </h2>
         <p>Nenhum registro de clima encontrado.</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="bg-white p-8 rounded-lg shadow-xl mb-10 text-center py-10 text-gray-500">
+        <h2 className="text-2xl font-bold text-gray-700 mb-4">
+          Logs Brutos (Detalhamento)
+        </h2>
+        <p>Erro ao carregar os logs: {error}</p>
       </div>
     );
   }
@@ -79,7 +99,7 @@ const LogsTable: React.FC<LogsTableProps> = (props: LogsTableProps) => {
               <td colSpan={3}>
                 <div className="flex justify-center items-center mt-6 space-x-4">
                   <button
-                    onClick={props.handlePrevPage}
+                    onClick={handlePrevPage}
                     disabled={currentPage === 1}
                     className="px-4 py-2 bg-gray-200 rounded disabled:opacity-50 hover:bg-gray-300 transition-colors"
                   >
@@ -92,7 +112,7 @@ const LogsTable: React.FC<LogsTableProps> = (props: LogsTableProps) => {
                   </span>
 
                   <button
-                    onClick={props.handleNextPage}
+                    onClick={handleNextPage}
                     disabled={currentPage === totalPages}
                     className="px-4 py-2 bg-gray-200 rounded disabled:opacity-50 hover:bg-gray-300 transition-colors"
                   >
