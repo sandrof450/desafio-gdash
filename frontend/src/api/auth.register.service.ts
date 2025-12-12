@@ -5,7 +5,7 @@ import axios from 'axios';
 import type { AxiosInstance, AxiosResponse } from 'axios'; 
 import type { ApiRegisterRequest, ApiRegisterResponse, RegisterSuccessPayload } from '../constants/auth/types';
 
-const URL = 'http://localhost:3000/';
+const URL = process.env.VITE_API_BASE_URL || 'http://localhost:3000/';
 
 const api: AxiosInstance = axios.create({
   baseURL: URL,
