@@ -31,10 +31,18 @@ const getChartData = (logs: WeatherLog[]) => {
   };
 };
 
-
-
-const TemperatureChart = () => { 
-  const {logs } = useWeather();
+const TemperatureChart = () => {
+  const { logs, logsLoading } = useWeather();
+  if (logsLoading && logs.length === 0) {
+    return (
+      <div className="bg-white p-8 rounded-lg shadow-xl mb-10">
+        <h2 className="text-2xl font-bold text-blue-700 mb-4">
+          Histórico de Temperatura
+        </h2>
+        <div className="animate-pulse bg-gray-200 h-64 rounded-md"></div>
+      </div>
+    );
+  }
   return (
     <div className="bg-white p-8 rounded-lg shadow-xl mb-10">
       <h2 className="text-2xl font-bold text-blue-700 mb-4">
@@ -48,7 +56,7 @@ const TemperatureChart = () => {
         </p>
       )}
     </div>
-  )
-}
+  );
+};
 
 export default TemperatureChart;

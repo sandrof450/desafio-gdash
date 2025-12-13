@@ -2,7 +2,7 @@ import axios from 'axios';
 import type { AxiosInstance, AxiosResponse } from 'axios';
 import type { ApiLoginRequest, AuthPayload, AuthResponse } from 'src/constants/auth/types';
 
-const URL = process.env.NEXT_PUBLIC_API_URL || 'https://backend-6ue3.onrender.com';
+const URL = import.meta.env.VITE_API_BASE_URL || 'https://backend-6ue3.onrender.com';
 
 const api: AxiosInstance = axios.create({
   baseURL: URL,

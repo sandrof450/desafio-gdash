@@ -1,7 +1,7 @@
 // src/api/api.ts (Versão 2.0 com Refresh Token)
 import axios from 'axios';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://backend-6ue3.onrender.com'; 
+const API_URL = import.meta.env.VITE_API_BASE_URL || 'https://backend-6ue3.onrender.com/'; 
 
 const api = axios.create({
   baseURL: API_URL,
@@ -60,6 +60,10 @@ api.interceptors.response.use(
     (response) => response,
     async (error) => {
         const originalRequest = error.config;
+
+        if (window.location.pathname === "/login") {
+            return Promise.reject(error);
+        }
         
         // 1. Verifica se é erro 401 e se a requisição não está marcada como 'retry'
         if (error.response && error.response.status === 401 && !originalRequest._retry) {
@@ -71,9 +75,14 @@ api.interceptors.response.use(
             
             // Se não houver Refresh Token, o usuário deve ser deslogado imediatamente
             if (!refreshToken) {
-                // Força o logout e redireciona (aqui é o ponto final, Refresh Token expirado ou nulo)
                 localStorage.removeItem(JWT_ACCESS_SECRET);
-                window.location.href = '/login';
+                localStorage.removeItem(JWT_REFRESH_SECRET);
+
+                // 👉 Só redireciona se NÃO estiver no login
+                if (window.location.pathname !== "/login") {
+                    window.location.href = "/login";
+                }
+
                 return Promise.reject(error);
             }
 
