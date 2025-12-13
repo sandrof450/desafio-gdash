@@ -8,20 +8,18 @@ import {
 import { useSearchParams } from "react-router-dom";
 import { getWeatherLogs } from "src/api/weather.log.service";
 import type { WeatherLog } from "src/constants/weather/types";
+import { useAuth } from "./AuthContext";
 
 interface WeatherContextType {
   logs: WeatherLog[];
   logsLoading: boolean;
   logsError: string | null;
 
-  //paginação
   currentPage: number;
   totalPages: number;
   totalLogs: number;
   limit: number;
-  setCurrentPage: React.Dispatch<React.SetStateAction<number>>; //Função para alterar a página atual
-
-  //Função para forçar o recarregamento, se necessário
+  setCurrentPage: React.Dispatch<React.SetStateAction<number>>;
   refetchLogs: () => Promise<void>;
 }
 
@@ -35,38 +33,44 @@ export const WeatherProvider: React.FC<{ children: React.ReactNode }> = ({
   const pageParam = searchParams.get("page");
   const initialPage = pageParam ? parseInt(pageParam) : 1;
 
-  //Dados principais
   const [logs, setLogs] = useState<WeatherLog[]>([]);
-  const [logsLoading, setLogsLoading] = useState<boolean>(true);
+  const [logsLoading, setLogsLoading] = useState<boolean>(false);
   const [logsError, setLogsError] = useState<string | null>(null);
 
-  //Estados de paginação
   const [currentPage, setCurrentPageState] = useState<number>(initialPage);
   const [totalPages, setTotalPages] = useState<number>(0);
   const [totalLogs, setTotalLogs] = useState<number>(0);
   const [limit] = useState<number>(10);
 
   const setCurrentPage = (page: number | ((prevState: number) => number)) => {
-    let nextPage;
-    if (typeof page === "function") {
-      nextPage = page(currentPage);
-    } else {
-      nextPage = page;
-    }
+    let nextPage = typeof page === "function" ? page(currentPage) : page;
     if (nextPage < 1) nextPage = 1;
 
     setCurrentPageState(nextPage);
     setSearchParams({ page: nextPage.toString() }, { replace: true });
   };
 
+  const { isAuthenticated } = useAuth();
+
+  // ---------------------------------------------------
+  // BUSCA DOS LOGS — agora com verificação de token
+  // ---------------------------------------------------
   const fetchLogs = useCallback(async () => {
+    const token = localStorage.getItem("jwt_access_token");
+
+    // Se não houver token, não faz a requisição
+    if (!token) {
+      setLogsLoading(false);
+      return;
+    }
+
     setLogsLoading(true);
     setLogsError(null);
 
     try {
-
       const logsResponse = await getWeatherLogs(currentPage, limit);
       const logData = logsResponse.data || logsResponse;
+
       setLogs(logData.logs || []);
       setTotalLogs(logData.totalLogs || 0);
       setTotalPages(logData.totalPages || 0);
@@ -76,13 +80,25 @@ export const WeatherProvider: React.FC<{ children: React.ReactNode }> = ({
     } finally {
       setLogsLoading(false);
     }
-  }, [currentPage, limit]); // Dispara a busca quando a página muda!
+  }, [currentPage, limit]);
 
+  // ---------------------------------------------------
+  // EXECUTAR APENAS SE HOUVER TOKEN
+  // ---------------------------------------------------
   useEffect(() => {
+    const token = localStorage.getItem("jwt_access_token");
+
+    if (!token) {
+      return;
+    }
+
     fetchLogs();
   }, [fetchLogs]);
 
-  // A função de refetch será a mesma fetchData
+  useEffect(() => {
+    if (isAuthenticated)
+      fetchLogs();
+  }, [isAuthenticated, fetchLogs])
 
   const refetchLogs = fetchLogs;
 
@@ -107,7 +123,7 @@ export const WeatherProvider: React.FC<{ children: React.ReactNode }> = ({
 
 export const useWeather = () => {
   const context = useContext(WeatherContext);
-  if (context === undefined) {
+  if (!context) {
     throw new Error("useWeather must be used within a WeatherProvider");
   }
   return context;

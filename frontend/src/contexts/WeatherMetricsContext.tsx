@@ -7,12 +7,13 @@ import {
 } from "react";
 import { getInsights } from "src/api/weather.insight.service";
 import type { WeatherInsight } from "src/constants/weather/types";
+import { useAuth } from "./AuthContext";
 
 export interface MetricsContextType {
   metrics: WeatherInsight | null;
   metricsLoading: boolean;
   metricsError: string | null;
-  fetchMetrics: () => void; // Função para recarregar os KPIs
+  fetchMetrics: () => void;
 }
 
 const MetricsContext = createContext<MetricsContextType | undefined>(undefined);
@@ -24,18 +25,25 @@ export const MetricsProvider: React.FC<{ children: React.ReactNode }> = ({
   const [metricsLoading, setMetricsLoading] = useState(true);
   const [metricsError, setMetricsError] = useState<string | null>(null);
 
-  // Função que busca os dados resumidos (KPIs, Insights)
+  const {isAuthenticated} = useAuth();
+
+  // ---------------------------------------------------
+  // Função para buscar KPIs
+  // Só roda se o token existir
+  // ---------------------------------------------------
   const fetchMetrics = useCallback(async () => {
+    const token = localStorage.getItem("jwt_access_token");
+
+    if (!token) {
+      return;
+    }
+
     setMetricsLoading(true);
     setMetricsError(null);
+
     try {
-      // A resposta deve incluir averageTemperature e totalRecords.
       const response = await getInsights();
-
-      // O endpoint de insights/métricas pode retornar um objeto WeatherMetrics
-      // Exemplo: { averageTemperature: 25.5, totalRecords: 150 }
       const metricsData: WeatherInsight = response.data || response;
-
       setMetrics(metricsData);
     } catch (err) {
       console.error("Erro ao carregar métricas:", err);
@@ -45,11 +53,24 @@ export const MetricsProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   }, []);
 
+  // ---------------------------------------------------
+  // Efeito que roda somente se houver token
+  // ---------------------------------------------------
   useEffect(() => {
+    const token = localStorage.getItem("jwt_access_token");
+
+    if (!token) {
+      setMetricsLoading(false); // Evita spinner infinito na tela de login
+      return;
+    }
+
     fetchMetrics();
-    // Adicionar um intervalo de recarga automática aqui, se as métricas forem importantes.
-    // Exemplo: setInterval(fetchMetrics, 300000); // Recarrega a cada 5 minutos
   }, [fetchMetrics]);
+
+  useEffect(() => {
+    if (isAuthenticated)
+      fetchMetrics();
+  }, [isAuthenticated, fetchMetrics])
 
   return (
     <MetricsContext.Provider
@@ -60,6 +81,7 @@ export const MetricsProvider: React.FC<{ children: React.ReactNode }> = ({
   );
 };
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const useMetrics = () => {
   const context = useContext(MetricsContext);
   if (context === undefined) {
