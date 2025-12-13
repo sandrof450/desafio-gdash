@@ -6,7 +6,6 @@ import type {
   ApiRegisterRequest,
   ApiLoginRequest,
 } from "src/constants/auth/types";
-import { set } from "zod";
 
 const ACCESS_TOKEN_KEY = "jwt_access_token";
 const REFRESH_TOKEN_KEY = "jwt_refresh_token";
@@ -146,6 +145,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     //Redireciona para tela de login após logout
     navigate("/login");
   };
+
+  console.log("AuthContext - isAuthenticated:", isAuthenticated);
 
   return (
     <AuthContext.Provider
