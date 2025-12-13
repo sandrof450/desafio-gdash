@@ -1,7 +1,7 @@
 // src/api/api.ts (Versão 2.0 com Refresh Token)
 import axios from 'axios';
 
-const API_URL = import.meta.env.VITE_API_BASE_URL || 'https://backend-6ue3.onrender.com/'; 
+const API_URL = 'https://backend-6ue3.onrender.com/'; 
 
 const api = axios.create({
   baseURL: API_URL,

@@ -1,18 +1,9 @@
-// 1. Importa o valor padrão (a biblioteca Axios em si)
 import axios from 'axios'; 
 
-// 2. Importa *apenas* o tipo AxiosInstance (sem causar erro no runtime)
-import type { AxiosInstance, AxiosResponse } from 'axios'; 
+import api from './protectedApi';
+
 import type { ApiRegisterRequest, ApiRegisterResponse, RegisterSuccessPayload } from '../constants/auth/types';
-
-const URL = import.meta.env.VITE_API_BASE_URL || 'https://backend-6ue3.onrender.com';
-
-const api: AxiosInstance = axios.create({
-  baseURL: URL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-});
+import type { AxiosResponse } from 'axios'; 
 
 
 export const register = async (data: ApiRegisterRequest): Promise<RegisterSuccessPayload | null> => {

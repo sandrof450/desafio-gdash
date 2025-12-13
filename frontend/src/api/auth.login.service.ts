@@ -1,15 +1,8 @@
 import axios from 'axios';
-import type { AxiosInstance, AxiosResponse } from 'axios';
+import type { AxiosResponse } from 'axios';
 import type { ApiLoginRequest, AuthPayload, AuthResponse } from 'src/constants/auth/types';
+import api from './protectedApi';
 
-const URL = import.meta.env.VITE_API_BASE_URL || 'https://backend-6ue3.onrender.com';
-
-const api: AxiosInstance = axios.create({
-  baseURL: URL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-});
 
 export const login = async (data: ApiLoginRequest): Promise<AuthPayload | null> => {
   try {
