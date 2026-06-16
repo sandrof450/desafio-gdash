@@ -1,21 +1,24 @@
 # Backend - NestJS
 
-Este projeto contém a API backend desenvolvida em **NestJS**, já preparada para futura expansão para arquitetura de **microserviços**.
+Este projeto contém a API backend desenvolvida em **NestJS**, responsável pela autenticação dos usuários e gerenciamento dos registros climáticos da aplicação GDash.
+
+A solução foi estruturada visando organização, validação de dados e facilidade de evolução para cenários mais complexos, incluindo futuras expansões para arquiteturas baseadas em microsserviços.
 
 ## 🚀 Tecnologias Utilizadas
 
-* **Node.js**
-* **NestJS**
-* **Prisma ORM**
-* **PostgreSQL** (ou outro banco, conforme `.env`)
-* **JWT Authentication**
-* **Class-validator / class-transformer**
+* Node.js
+* NestJS
+* Prisma ORM
+* MongoDB
+* JWT Authentication
+* class-validator
+* class-transformer
 
 ---
 
 ## 📦 Estrutura do Projeto
 
-```
+```text
 backend/
 │── src/
 │   ├── auth/
@@ -31,6 +34,7 @@ backend/
 │   │   └── prisma.service.ts
 │   └── app.module.ts
 │
+│── prisma/
 │── .env
 │── Dockerfile
 │── package.json
@@ -44,9 +48,9 @@ backend/
 
 Crie um arquivo `.env` na raiz do backend com:
 
-```
+```env
 PORT=3000
-DATABASE_URL="postgresql://USER:SENHA@HOST:PORT/DB?schema=public"
+DATABASE_URL="mongodb+srv://USUARIO:SENHA@cluster.mongodb.net/gdash"
 JWT_SECRET=SUA_CHAVE_AQUI
 JWT_EXPIRATION=1d
 ```
@@ -55,35 +59,35 @@ JWT_EXPIRATION=1d
 
 ## ▶️ Como Rodar o Projeto
 
-### Instalar dependências:
+### Instalar dependências
 
-```
+```bash
 npm install
 ```
 
-### Rodar em modo desenvolvimento:
+### Executar em modo desenvolvimento
 
-```
+```bash
 npm run start:dev
 ```
 
-### Rodar migrações do Prisma:
+### Sincronizar o schema do Prisma com o MongoDB
 
-```
-npx prisma migrate dev
+```bash
+npx prisma db push
 ```
 
 ---
 
 ## 🔐 Autenticação (JWT)
 
-Rotas protegidas exigem um header:
+As rotas protegidas exigem o envio do token JWT no cabeçalho da requisição:
 
-```
+```text
 Authorization: Bearer <token>
 ```
 
-### **Rotas de Autenticação**
+### Rotas de Autenticação
 
 #### POST `/auth/register`
 
@@ -91,19 +95,19 @@ Cria um novo usuário.
 
 #### POST `/auth/login`
 
-Retorna `access_token`.
+Autentica o usuário e retorna o `access_token`.
 
 ---
 
 ## 🌤 Weather Logs
 
-### **POST `/weather/logs`**
+### POST `/weather/logs`
 
-Cria um novo registro de clima.
+Cria um novo registro climático.
 
 **Body esperado:**
 
-```
+```json
 {
   "temperature": 25,
   "humidity": 70,
@@ -112,26 +116,28 @@ Cria um novo registro de clima.
 }
 ```
 
-### **GET `/weather/logs`**
+### GET `/weather/logs`
 
-Retorna todos os registros ordenados por data.
+Retorna todos os registros ordenados pela data de criação.
 
-### **GET `/weather/logs/:id`**
+### GET `/weather/logs/:id`
 
-Busca registro individual.
+Retorna um registro específico pelo identificador.
 
 ---
 
 ## 📌 Validação Global
 
-A aplicação usa:
+A aplicação utiliza validação global para garantir a integridade dos dados recebidos:
 
-```
-Whitelist: remove campos extras
-forbidNonWhitelisted: bloqueia campos inválidos
-transform: converte tipos
-```
+* `whitelist`: remove propriedades não permitidas;
+* `forbidNonWhitelisted`: rejeita campos inválidos;
+* `transform`: converte automaticamente os tipos recebidos.
 
-Configurado no `main.ts`.
+Essas configurações são aplicadas globalmente no `main.ts`.
 
 ---
+
+## 🎯 Objetivo
+
+Este backend foi desenvolvido para demonstrar conhecimentos em construção de APIs com NestJS, autenticação baseada em JWT, validação de dados, integração com MongoDB através do Prisma e organização de aplicações preparadas para futura evolução arquitetural.
