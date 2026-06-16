@@ -1,137 +1,57 @@
-# Backend - NestJS
+# Desafio GDash
 
-Este projeto contém a API backend desenvolvida em **NestJS**, já preparada para futura expansão para arquitetura de **microserviços**.
+Projeto Full Stack desenvolvido com foco em arquitetura distribuída, integração entre serviços e processamento assíncrono.
 
-## 🚀 Tecnologias Utilizadas
+A solução foi construída utilizando diferentes tecnologias para simular cenários reais encontrados em aplicações modernas.
 
-* **Node.js**
-* **NestJS**
-* **Prisma ORM**
-* **PostgreSQL** (ou outro banco, conforme `.env`)
-* **JWT Authentication**
-* **Class-validator / class-transformer**
+## Arquitetura
 
----
+* Frontend responsável pela interface do usuário;
+* Backend desenvolvido em NestJS;
+* Producer em Python para envio de mensagens;
+* Worker em Go para processamento assíncrono;
+* Infraestrutura containerizada para execução dos serviços.
 
-## 📦 Estrutura do Projeto
+## Tecnologias
 
-```
-backend/
-│── src/
-│   ├── auth/
-│   │   ├── auth.controller.ts
-│   │   ├── auth.service.ts
-│   │   ├── auth.module.ts
-│   │   └── dto/
-│   ├── weather/
-│   │   ├── weather.controller.ts
-│   │   ├── weather.service.ts
-│   │   └── dtos/
-│   ├── prisma/
-│   │   └── prisma.service.ts
-│   └── app.module.ts
-│
-│── .env
-│── Dockerfile
-│── package.json
-│── tsconfig.json
-│── README.md
-```
+### Frontend
 
----
+* React
+* TypeScript
 
-## ⚙️ Variáveis de Ambiente
+### Backend
 
-Crie um arquivo `.env` na raiz do backend com:
+* NestJS
+* Prisma ORM
+* PostgreSQL
+* JWT
 
-```
-PORT=3000
-DATABASE_URL="postgresql://USER:SENHA@HOST:PORT/DB?schema=public"
-JWT_SECRET=SUA_CHAVE_AQUI
-JWT_EXPIRATION=1d
-```
+### Processamento
 
----
+* Python
+* Go
 
-## ▶️ Como Rodar o Projeto
+### Infraestrutura
 
-### Instalar dependências:
+* Docker
+* Docker Compose
 
-```
-npm install
-```
+## Estrutura do Projeto
 
-### Rodar em modo desenvolvimento:
+desafio-gdash/
+├── backend/
+├── frontend/
+├── go-worker/
+├── python-producer/
+└── infra/
 
-```
-npm run start:dev
-```
+## Demonstração
 
-### Rodar migrações do Prisma:
+Frontend disponível em produção:
+https://desafio-gdash-sooty.vercel.app
 
-```
-npx prisma migrate dev
-```
+Os deployments do backend utilizados durante o desenvolvimento foram descontinuados após o término do período gratuito da infraestrutura utilizada. Todo o código-fonte e instruções para execução local permanecem disponíveis neste repositório.
 
----
+## Objetivo
 
-## 🔐 Autenticação (JWT)
-
-Rotas protegidas exigem um header:
-
-```
-Authorization: Bearer <token>
-```
-
-### **Rotas de Autenticação**
-
-#### POST `/auth/register`
-
-Cria um novo usuário.
-
-#### POST `/auth/login`
-
-Retorna `access_token`.
-
----
-
-## 🌤 Weather Logs
-
-### **POST `/weather/logs`**
-
-Cria um novo registro de clima.
-
-**Body esperado:**
-
-```
-{
-  "temperature": 25,
-  "humidity": 70,
-  "windSpeed": 10,
-  "description": "Dia ensolarado"
-}
-```
-
-### **GET `/weather/logs`**
-
-Retorna todos os registros ordenados por data.
-
-### **GET `/weather/logs/:id`**
-
-Busca registro individual.
-
----
-
-## 📌 Validação Global
-
-A aplicação usa:
-
-```
-Whitelist: remove campos extras
-forbidNonWhitelisted: bloqueia campos inválidos
-transform: converte tipos
-```
-
-Configurado no `main.ts`.
-
----
+Demonstrar conhecimentos em desenvolvimento Full Stack, integração entre serviços, autenticação, arquitetura distribuída e boas práticas de organização de projetos.
